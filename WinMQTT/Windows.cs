@@ -35,6 +35,14 @@ namespace WinMQTT
                     await SendStatus();
                     break;
 
+                case "windows/volume/status":
+                    await SendVolume();
+                    break;
+
+                case "windows/screens/status":
+                    await SendScreens();
+                    break;
+
                 case "windows/sendkeys":
                     KeyStroke(payload);
                     break;
@@ -52,10 +60,11 @@ namespace WinMQTT
             }
         }
 
-        private async Task SendStatus()
-        {
-            await mqtt.Publish("windows", "On");
-        }
+        private async Task SendStatus() => await mqtt.Publish("windows", "On");
+
+        private async Task SendVolume() => await mqtt.Publish("windows/volume", GetVolume());
+
+        private async Task SendScreens() => await mqtt.Publish("windows/screens", GetMonitors());
 
         public void Actions(string payload)
         {
