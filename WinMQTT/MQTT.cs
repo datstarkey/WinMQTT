@@ -13,14 +13,15 @@ namespace WinMQTT
 {
     public class MQTT
     {
-        private MqttFactory factory = new MqttFactory();
+        private MqttFactory factory;
         private IMqttClient mqttClient;
         private Windows windows;
+        private OptionsPage optionsPage;
 
         public MQTT()
         {
-            Debug.WriteLine("STARTING");
             windows = new Windows(this);
+            factory = new MqttFactory();
             mqttClient = factory.CreateMqttClient();
         }
 
@@ -28,9 +29,15 @@ namespace WinMQTT
         {
             try
             {
-                var options = new MqttClientOptionsBuilder().WithClientId("Windows Dekstop").WithTcpServer(TrayContext.Options.Server, TrayContext.Options.Port).WithCleanSession().Build();
+                Console.WriteLine("Starting MQTT Client");
+                var server = Properties.Settings.Default.Server;
+                var port = Properties.Settings.Default.Port;
+                var username = Properties.Settings.Default.Username;
+                var password = Properties.Settings.Default.Password;
+
+                var options = new MqttClientOptionsBuilder().WithClientId("Windows Dekstop").WithTcpServer(server, port).WithCleanSession().Build();
                 await mqttClient.ConnectAsync(options, CancellationToken.None);
-                Debug.WriteLine("### CONNECTED WITH SERVER ###");
+                Console.WriteLine("### CONNECTED WITH SERVER ###");
 
                 await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/sendkeys").Build());
                 await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/actions").Build());
@@ -64,21 +71,24 @@ namespace WinMQTT
                     }
                 });
             }
-            catch (Exception e)
+            catch
             {
                 Console.WriteLine($"Error = could not connect");
                 MessageBox.Show("Incorrect Ip / Port");
-                TrayContext.OpenOptions();
+                optionsPage.Show();
             }
         }
 
         public async void Stop()
         {
-            mqttClient.UseDisconnectedHandler(e =>
-           {
-               Debug.WriteLine("### DISCONNECTED FROM SERVER ###");
-           });
-            await mqttClient.DisconnectAsync();
+            if (mqttClient.IsConnected)
+            {
+                mqttClient.UseDisconnectedHandler(e =>
+               {
+                   Console.WriteLine("Stopping MQTT Client");
+               });
+                await mqttClient.DisconnectAsync();
+            }
         }
 
         public async Task Publish(string topic, string payload)

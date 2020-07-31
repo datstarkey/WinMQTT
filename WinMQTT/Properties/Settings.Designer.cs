@@ -25,37 +25,49 @@ namespace WinMQTT.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("192.168.87.68:1883")]
-        public string broker {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Server {
             get {
-                return ((string)(this["broker"]));
+                return ((string)(this["Server"]));
             }
             set {
-                this["broker"] = value;
+                this["Server"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Windows Desktop")]
-        public string clientID {
+        [global::System.Configuration.DefaultSettingValueAttribute("1883")]
+        public int Port {
             get {
-                return ((string)(this["clientID"]));
+                return ((int)(this["Port"]));
             }
             set {
-                this["clientID"] = value;
+                this["Port"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string MqttSettings {
+        public string Username {
             get {
-                return ((string)(this["MqttSettings"]));
+                return ((string)(this["Username"]));
             }
             set {
-                this["MqttSettings"] = value;
+                this["Username"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Password {
+            get {
+                return ((string)(this["Password"]));
+            }
+            set {
+                this["Password"] = value;
             }
         }
     }

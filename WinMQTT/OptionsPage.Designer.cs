@@ -1,6 +1,6 @@
 ﻿namespace WinMQTT
 {
-    partial class Options
+    partial class OptionsPage
     {
         /// <summary>
         /// Required designer variable.

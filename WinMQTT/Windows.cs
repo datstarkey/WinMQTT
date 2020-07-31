@@ -130,7 +130,7 @@ namespace WinMQTT
             {
                 double.TryParse(volume, out double v);
                 Debug.WriteLine(v);
-                defaultPlaybackDevice.SetVolumeAsync(v);
+                defaultPlaybackDevice.Volume = v;
             }
             catch (Exception e)
             {

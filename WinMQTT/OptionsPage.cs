@@ -10,27 +10,33 @@ using System.Windows.Forms;
 
 namespace WinMQTT
 {
-    public partial class Options : Form
+    public partial class OptionsPage : Form
     {
-        public Options()
+        private Properties.Settings settings = Properties.Settings.Default;
+
+        public OptionsPage()
         {
             InitializeComponent();
 
-            this.ServerBox.Text = TrayContext.Options.Server;
-            this.PortBox.Text = TrayContext.Options.Port.ToString();
-            this.UsernameBox.Text = TrayContext.Options.Username;
-            this.PasswordBox.Text = TrayContext.Options.Password;
+            this.ServerBox.Text = settings.Server;
+            this.PortBox.Text = settings.Port.ToString();
+            this.UsernameBox.Text = settings.Username;
+            this.PasswordBox.Text = settings.Password;
+
+            TrayContext.Mqtt.Stop();
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
             if (IsDigitsOnly(this.PortBox.Text))
             {
-                TrayContext.Options.Server = ServerBox.Text;
-                TrayContext.Options.Port = int.Parse(PortBox.Text);
-                TrayContext.Options.Username = UsernameBox.Text;
-                TrayContext.Options.Password = PasswordBox.Text;
-                this.Hide();
+                settings.Server = ServerBox.Text;
+                settings.Port = int.Parse(PortBox.Text);
+                settings.Username = UsernameBox.Text;
+                settings.Password = PasswordBox.Text;
+                settings.Save();
+                TrayContext.Mqtt.Start();
+                this.Close();
             }
             else
                 MessageBox.Show("Error", "Port can only be numbers", MessageBoxButtons.OK);

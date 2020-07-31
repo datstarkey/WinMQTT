@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
@@ -12,9 +12,8 @@ namespace WinMQTT
         private ContextMenuStrip TrayIconContextMenu;
         private ToolStripMenuItem CloseMenuItem;
         private ToolStripMenuItem OptionsItem;
-        public static OptionsModel Options;
-        private static MQTT mqtt;
-        public static Options OptionsPage;
+        public static MQTT Mqtt;
+        private Properties.Settings settngs = Properties.Settings.Default;
 
         public TrayContext()
         {
@@ -25,34 +24,18 @@ namespace WinMQTT
 
         private void Main()
         {
-            LoadOptions();
             TrayIcon.Visible = true;
-            mqtt = new MQTT();
+            Mqtt = new MQTT();
 
-            if (Options.Server.Length > 0)
-                mqtt.Start();
-            else
-                OpenOptions();
-        }
-
-        private static void SettingsChanged(object sender, EventArgs e)
-        {
-            if (OptionsPage.Visible)
-                mqtt.Stop();
+            if (String.IsNullOrEmpty(settngs.Server))
+            {
+                var optionsPage = new OptionsPage();
+                optionsPage.Show();
+            }
             else
             {
-                Properties.Settings.Default.MqttSettings = JsonConvert.SerializeObject(Options);
-                Properties.Settings.Default.Save();
-                mqtt.Start();
+                Mqtt.Start();
             }
-        }
-
-        private void LoadOptions()
-        {
-            if (Properties.Settings.Default.MqttSettings != "")
-                Options = JsonConvert.DeserializeObject<OptionsModel>(Properties.Settings.Default.MqttSettings);
-            else
-                Options = new OptionsModel();
         }
 
         private void InitializeComponent()
@@ -68,7 +51,7 @@ namespace WinMQTT
 
             TrayIcon.Text = "Windows MQTT Client Executor";
 
-            TrayIconContextMenu.Items.AddRange(new ToolStripItem[] { OptionsItem, CloseMenuItem,  });
+            TrayIconContextMenu.Items.AddRange(new ToolStripItem[] { OptionsItem, CloseMenuItem, });
             TrayIconContextMenu.Name = "TrayIconContextMenu";
             TrayIconContextMenu.Size = new Size(153, 70);
 
@@ -84,24 +67,12 @@ namespace WinMQTT
 
             TrayIconContextMenu.ResumeLayout(false);
             TrayIcon.ContextMenuStrip = TrayIconContextMenu;
-
-            Debug.WriteLine("Tray Made");
         }
 
         private void OpenSettingsEvent(object sender, EventArgs e)
         {
-            OpenOptions();
-        }
-
-        public static void OpenOptions()
-        {
-            if (OptionsPage == null)
-            {
-                OptionsPage = new Options();
-                OptionsPage.VisibleChanged += SettingsChanged;
-            }
-
-            OptionsPage.Show();
+            var optionsPage = new OptionsPage();
+            optionsPage.Show();
         }
 
         private void OnApplicationExit(object sender, EventArgs e) => TrayIcon.Visible = false;
