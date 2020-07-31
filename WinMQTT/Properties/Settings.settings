@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="WinMQTT.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="broker" Type="System.String" Scope="User">
+      <Value Profile="(Default)">192.168.87.68:1883</Value>
+    </Setting>
+    <Setting Name="clientID" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Windows Desktop</Value>
+    </Setting>
+    <Setting Name="MqttSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>
