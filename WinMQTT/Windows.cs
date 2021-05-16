@@ -7,11 +7,10 @@ using System.Windows.Forms;
 
 namespace WinMQTT
 {
-    public class Windows
+    public static class Windows
     {
-        private CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
-        private double volume = 0;
-        private MQTT mqtt;
+        private static readonly CoreAudioDevice DefaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
+        private static double Volume { get; set; } = 0;
 
         [DllImport("user32")]
         public static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
@@ -20,14 +19,10 @@ namespace WinMQTT
         public static extern void LockWorkStation();
 
         [DllImport("PowrProf.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
+        public static extern bool SetSuspendState(bool hibernate, bool forceCritical, bool disableWakeEvent);
 
-        public Windows(MQTT MQTT)
-        {
-            mqtt = MQTT;
-        }
 
-        public async void ProcessRequest(string topic, string payload)
+        public static async void ProcessRequest(string topic, string payload)
         {
             switch (topic)
             {
@@ -52,7 +47,7 @@ namespace WinMQTT
                     break;
 
                 case "windows/volume":
-                    Volume(payload);
+                    ChangeVolume(payload);
                     break;
 
                 default:
@@ -60,58 +55,53 @@ namespace WinMQTT
             }
         }
 
-        private async Task SendStatus() => await mqtt.Publish("windows", "On");
+        public static async Task SendStatus(string status = "true") =>
+            await MQTT.Publish($"windows/{Environment.MachineName}", status);
 
-        private async Task SendVolume() => await mqtt.Publish("windows/volume", GetVolume());
+        private static async Task SendVolume() =>
+            await MQTT.Publish($"windows/{Environment.MachineName}volume", GetVolume());
 
-        private async Task SendScreens() => await mqtt.Publish("windows/screens", GetMonitors());
+        private static async Task SendScreens() =>
+            await MQTT.Publish($"windows/{Environment.MachineName}/screens", GetMonitors());
 
-        public void Actions(string payload)
+        public static void Actions(string payload)
         {
-            try
+            switch (payload)
             {
-                switch (payload)
-                {
-                    case "sleep":
-                        SetSuspendState(false, true, true);
-                        break;
+                case "sleep":
+                    SetSuspendState(false, true, true);
+                    break;
 
-                    case "hibernate":
-                        SetSuspendState(true, true, true);
-                        break;
+                case "hibernate":
+                    SetSuspendState(true, true, true);
+                    break;
 
-                    case "shutdown":
-                        Process.Start("shutdown", "/s /t 0");
-                        break;
+                case "shutdown":
+                    Process.Start("shutdown", "/s /t 0");
+                    break;
 
-                    case "restart":
-                        Process.Start("shutdown", "/r /t 0");
-                        break;
+                case "restart":
+                    Process.Start("shutdown", "/r /t 0");
+                    break;
 
-                    case "logout":
-                        ExitWindowsEx(0, 0);
-                        break;
+                case "logout":
+                    ExitWindowsEx(0, 0);
+                    break;
 
-                    case "lock":
-                        LockWorkStation();
-                        break;
+                case "lock":
+                    LockWorkStation();
+                    break;
 
-                    case "exit":
-                        Application.Exit();
-                        break;
+                case "exit":
+                    Application.Exit();
+                    break;
 
-                    default:
-                        break;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                Debug.WriteLine("not valid input");
+                default:
+                    break;
             }
         }
 
-        public void KeyStroke(string input)
+        private static void KeyStroke(string input)
         {
             try
             {
@@ -119,41 +109,38 @@ namespace WinMQTT
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
-                Debug.WriteLine("not valid input");
+                Console.WriteLine($"Error = {e}");
             }
         }
 
-        public void Volume(string volume)
+        private static void ChangeVolume(string volume)
         {
             try
             {
                 double.TryParse(volume, out double v);
-                Debug.WriteLine(v);
-                defaultPlaybackDevice.Volume = v;
+                DefaultPlaybackDevice.Volume = v;
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
-                Debug.WriteLine("not valid input");
+                Console.WriteLine($"Error = {e}");
             }
         }
 
-        public string GetVolume()
+        private static string GetVolume()
         {
             try
             {
-                volume = Math.Round(defaultPlaybackDevice.Volume);
+                Volume = Math.Round(DefaultPlaybackDevice.Volume);
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
+                Console.WriteLine($"Error = {e}");
             }
 
-            return volume.ToString();
+            return Volume.ToString();
         }
 
-        public string GetMonitors()
+        private static string GetMonitors()
         {
             try
             {
@@ -162,8 +149,7 @@ namespace WinMQTT
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
-                Debug.WriteLine("not valid input");
+                Console.WriteLine($"Error = {e}");
                 return "0";
             }
         }

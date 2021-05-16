@@ -4,108 +4,162 @@ using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinMQTT.Extensions;
+using Timer = System.Windows.Forms.Timer;
 
 namespace WinMQTT
 {
-    public class MQTT
+    public static class MQTT
     {
-        private MqttFactory factory;
-        private IMqttClient mqttClient;
-        private Windows windows;
-        private OptionsPage optionsPage;
+        private static readonly IMqttClient MqttClient = new MqttFactory().CreateMqttClient();
+        public static bool Running = false;
+        public static CancellationTokenSource TokenSource = new CancellationTokenSource();
 
-        public MQTT()
+        public static Timer SendStatus = new Timer()
         {
-            windows = new Windows(this);
-            factory = new MqttFactory();
-            mqttClient = factory.CreateMqttClient();
-        }
+            Enabled = false,
+            Interval = 5000,
+        };
 
-        public async void Start()
+
+        public static async Task Start()
         {
-            try
+            Running = true;
+            var machineName = Environment.MachineName;
+
+            var token = TokenSource.Token;
+
+            SendStatus.Tick -= UpdateMachineStatus;
+            SendStatus.Tick += UpdateMachineStatus;
+            SendStatus.Enabled = true;
+
+
+            Console.WriteLine("Starting MQTT Client");
+            var server = Properties.Settings.Default.Server;
+            var port = Properties.Settings.Default.Port;
+            var username = Properties.Settings.Default.Username;
+            var password = Properties.Settings.Default.Password;
+
+            var options = new MqttClientOptionsBuilder()
+                .WithClientId($"Windows {machineName}")
+                .WithTcpServer(server, port)
+                .WithWillMessage(new MqttApplicationMessageBuilder()
+                    .WithTopic($"windows/{machineName}")
+                    .WithPayload("false")
+                    .Build())
+                .WithCredentials(username, password)
+                .WithCleanSession()
+                .Build();
+
+
+            await MqttClient.ConnectAsync(options, token);
+
+            Console.WriteLine("### CONNECTED WITH SERVER ###");
+
+            await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/sendkeys"));
+            await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/actions"));
+            await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/volume"));
+            await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/volume/status"));
+            await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/screens/status"));
+            await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/status"));
+
+
+            MqttClient.UseDisconnectedHandler(async e =>
             {
-                Console.WriteLine("Starting MQTT Client");
-                var server = Properties.Settings.Default.Server;
-                var port = Properties.Settings.Default.Port;
-                var username = Properties.Settings.Default.Username;
-                var password = Properties.Settings.Default.Password;
-
-                var options = new MqttClientOptionsBuilder().WithClientId("Windows Dekstop").WithTcpServer(server, port).WithCleanSession().Build();
-                await mqttClient.ConnectAsync(options, CancellationToken.None);
-                Console.WriteLine("### CONNECTED WITH SERVER ###");
-
-                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/sendkeys").Build());
-                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/actions").Build());
-                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/volume").Build());
-                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/volume/status").Build());
-                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/screens/status").Build());
-                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("windows/status").Build());
-
-                mqttClient.UseDisconnectedHandler(async e =>
-                {
-                    Debug.WriteLine("### DISCONNECTED FROM SERVER ###");
-                    await Task.Delay(1000);
-                    Start();
-                });
-
-                mqttClient.UseApplicationMessageReceivedHandler(e =>
-                {
-                    try
-                    {
-                        var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                        var topic = e.ApplicationMessage.Topic;
-                        Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
-                        Console.WriteLine($"+ Payload = {payload}");
-                        Console.WriteLine($"+ Topic = {topic}");
-                        windows.ProcessRequest(topic, payload);
-                    }
-                    catch (Exception error)
-                    {
-                        Console.WriteLine("Unable to Read Message");
-                        Console.WriteLine($"Error = {error}");
-                    }
-                });
-            }
-            catch
-            {
-                Console.WriteLine($"Error = could not connect");
-                MessageBox.Show("Incorrect Ip / Port");
-                optionsPage.Show();
-            }
-        }
-
-        public async void Stop()
-        {
-            if (mqttClient.IsConnected)
-            {
-                mqttClient.UseDisconnectedHandler(e =>
-               {
-                   Console.WriteLine("Stopping MQTT Client");
-               });
-                await mqttClient.DisconnectAsync();
-            }
-        }
-
-        public async Task Publish(string topic, string payload)
-        {
-            try
-            {
-                if (mqttClient.IsConnected)
+                Console.WriteLine("### DISCONNECTED FROM SERVER ###");
+                if (Running)
                 {
                     try
                     {
-                        var message = new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(payload).Build();
-                        await mqttClient.PublishAsync(message);
+                        await MqttClient.ConnectAsync(options, token);
                     }
-                    catch (Exception e)
+                    catch
                     {
-                        Console.WriteLine($"Error = {e}");
+                        Console.WriteLine("### RECONNECTING FAILED ###");
+                        await Task.Delay(3000);
                     }
+                }
+            });
+
+            MqttClient.UseApplicationMessageReceivedHandler(e =>
+            {
+                try
+                {
+                    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                    var topic = e.ApplicationMessage.Topic;
+                    Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
+                    Console.WriteLine($"+ Payload = {payload}");
+                    Console.WriteLine($"+ Topic = {topic}");
+                    Windows.ProcessRequest(topic.RemoveMachineName(), payload);
+                }
+                catch (Exception error)
+                {
+                    Console.WriteLine("Unable to Read Message");
+                    Console.WriteLine($"Error = {error}");
+                }
+            });
+        }
+
+        private static async void UpdateMachineStatus(object sender, EventArgs e)
+        {
+            await Windows.SendStatus();
+        }
+
+
+        public static async Task Restart()
+        {
+            Console.WriteLine("Restarting MQTT Client");
+            if (Running)
+                await Stop(false);
+
+            await Start();
+        }
+
+        public static async Task Stop(bool sendStop = true)
+        {
+            Console.WriteLine("Stopping MQTT Client");
+            Running = false;
+            SendStatus.Enabled = false;
+
+
+            if (TokenSource.Token.CanBeCanceled)
+            {
+                TokenSource.Cancel();
+                TokenSource = new CancellationTokenSource();
+            }
+
+            if (sendStop)
+                await Windows.SendStatus("false");
+
+            if (MqttClient.IsConnected)
+                await MqttClient.DisconnectAsync();
+        }
+
+
+        private static MqttTopicFilter Subscribe(string topic)
+        {
+            return new MqttTopicFilterBuilder()
+                .WithAtMostOnceQoS()
+                .WithTopic(topic)
+                .Build();
+        }
+
+        public static async Task Publish(string topic, string payload)
+        {
+            try
+            {
+                if (MqttClient.IsConnected)
+                {
+                    Console.WriteLine($"Publishing Message {payload} on topic {topic}");
+                    var message = new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(payload)
+                        .WithAtMostOnceQoS()
+                        .Build();
+                    await MqttClient.PublishAsync(message);
                 }
             }
             catch (Exception e)

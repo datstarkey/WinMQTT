@@ -7,36 +7,42 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace WinMQTT
 {
     public partial class OptionsPage : Form
     {
-        private Properties.Settings settings = Properties.Settings.Default;
+        private readonly Properties.Settings _settings = Properties.Settings.Default;
+        private static readonly string StartupKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+        private static readonly string StartupValue = "WinMQTT";
 
         public OptionsPage()
         {
             InitializeComponent();
 
-            this.ServerBox.Text = settings.Server;
-            this.PortBox.Text = settings.Port.ToString();
-            this.UsernameBox.Text = settings.Username;
-            this.PasswordBox.Text = settings.Password;
-
-            TrayContext.Mqtt.Stop();
+            this.ServerBox.Text = _settings.Server;
+            this.PortBox.Text = _settings.Port.ToString();
+            this.UsernameBox.Text = _settings.Username;
+            this.PasswordBox.Text = _settings.Password;
+            this.MachineName.Text = Environment.MachineName;
+            Startup.Checked = _settings.Startup;
         }
 
-        private void SaveButton_Click(object sender, EventArgs e)
+
+        private async void SaveButton_Click(object sender, EventArgs e)
         {
             if (IsDigitsOnly(this.PortBox.Text))
             {
-                settings.Server = ServerBox.Text;
-                settings.Port = int.Parse(PortBox.Text);
-                settings.Username = UsernameBox.Text;
-                settings.Password = PasswordBox.Text;
-                settings.Save();
-                TrayContext.Mqtt.Start();
-                this.Close();
+                _settings.Server = ServerBox.Text;
+                _settings.Port = int.Parse(PortBox.Text);
+                _settings.Username = UsernameBox.Text;
+                _settings.Password = PasswordBox.Text;
+                _settings.Startup = Startup.Checked;
+                _settings.Save();
+                SetStartup(_settings.Startup);
+                MQTT.Restart();
+                Close();
             }
             else
                 MessageBox.Show("Error", "Port can only be numbers", MessageBoxButtons.OK);
@@ -44,13 +50,20 @@ namespace WinMQTT
 
         private static bool IsDigitsOnly(string str)
         {
-            foreach (char c in str)
-            {
-                if (c < '0' || c > '9')
-                    return false;
-            }
+            return str.All(c => c >= '0' && c <= '9');
+        }
 
-            return true;
+        private void OptionsPage_Load(object sender, EventArgs e)
+        {
+        }
+
+        private static void SetStartup(bool value)
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(StartupKey, true))
+                if (value)
+                    key.SetValue(StartupValue, Application.ExecutablePath);
+                else
+                    key.DeleteValue(StartupValue);
         }
     }
 }
