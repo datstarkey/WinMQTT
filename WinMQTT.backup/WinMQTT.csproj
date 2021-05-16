@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net5.0</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+		<RootNamespace>WinMQTT</RootNamespace>
+		<AssemblyName>WinMQTT</AssemblyName>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="MQTTnet">
+			<Version>3.0.15</Version>
+		</PackageReference>
+		<PackageReference Include="NAudio" Version="2.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="System" />
+		<Reference Include="System.Core" />
+		<Reference Include="System.Xml.Linq" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Data" />
+		<Reference Include="System.Deployment" />
+		<Reference Include="System.Drawing" />
+		<Reference Include="System.Net.Http" />
+		<Reference Include="System.Windows.Forms" />
+		<Reference Include="System.Xml" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\TrayIcon.ico" />
+  </ItemGroup>
+</Project>

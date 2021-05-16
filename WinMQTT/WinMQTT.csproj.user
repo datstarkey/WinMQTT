@@ -12,5 +12,11 @@
   </PropertyGroup>
   <PropertyGroup>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
+    <_LastSelectedProfileId>C:\Users\jakes\source\repos\WinMQTT\WinMQTT\Properties\PublishProfiles\FolderProfile1.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="OptionsPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>

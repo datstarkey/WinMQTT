@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Design;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -9,7 +7,7 @@ namespace WinMQTT
 {
     internal class TrayContext : ApplicationContext
     {
-        private NotifyIcon _trayIcon;
+        public static NotifyIcon TrayIcon;
         private ContextMenuStrip _trayIconContextMenu;
         private ToolStripMenuItem _closeMenuItem;
         private ToolStripMenuItem _optionsItem;
@@ -22,9 +20,15 @@ namespace WinMQTT
             Main();
         }
 
+        public static void SendNotification(string text)
+        {
+            TrayIcon.BalloonTipText = text;
+            TrayIcon.ShowBalloonTip(1000);
+        }
+
         private async Task Main()
         {
-            _trayIcon.Visible = true;
+            TrayIcon.Visible = true;
 
             if (string.IsNullOrEmpty(_settings.Server))
             {
@@ -38,16 +42,16 @@ namespace WinMQTT
 
         private void InitializeComponent()
         {
-            _trayIcon = new NotifyIcon();
+            TrayIcon = new NotifyIcon();
 
             _trayIconContextMenu = new ContextMenuStrip();
             _closeMenuItem = new ToolStripMenuItem();
             _optionsItem = new ToolStripMenuItem();
             _trayIconContextMenu.SuspendLayout();
 
-            _trayIcon.Icon = Properties.Resources.TrayIcon;
+            TrayIcon.Icon = Properties.Resources.TrayIcon;
 
-            _trayIcon.Text = "Windows MQTT Client Executor";
+            TrayIcon.Text = "Windows MQTT Client Executor";
 
             _trayIconContextMenu.Items.AddRange(new ToolStripItem[] {_optionsItem, _closeMenuItem,});
             _trayIconContextMenu.Name = "_trayIconContextMenu";
@@ -55,7 +59,7 @@ namespace WinMQTT
 
             _closeMenuItem.Name = "_closeMenuItem";
             _closeMenuItem.Size = new Size(152, 22);
-            _closeMenuItem.Text = "Close the tray icon program";
+            _closeMenuItem.Text = "Close WinMQTT";
             _closeMenuItem.Click += CloseMenuItem_Click;
 
             _optionsItem.Name = "OpenSettingsItem";
@@ -64,7 +68,7 @@ namespace WinMQTT
             _optionsItem.Click += OpenSettingsEvent;
 
             _trayIconContextMenu.ResumeLayout(false);
-            _trayIcon.ContextMenuStrip = _trayIconContextMenu;
+            TrayIcon.ContextMenuStrip = _trayIconContextMenu;
         }
 
         private void OpenSettingsEvent(object sender, EventArgs e)
@@ -72,7 +76,7 @@ namespace WinMQTT
             new OptionsPage().Show();
         }
 
-        private void OnApplicationExit(object sender, EventArgs e) => _trayIcon.Visible = false;
+        private void OnApplicationExit(object sender, EventArgs e) => TrayIcon.Visible = false;
 
         private void CloseMenuItem_Click(object sender, EventArgs e)
         {

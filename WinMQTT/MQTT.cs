@@ -39,7 +39,7 @@ namespace WinMQTT
             SendStatus.Enabled = true;
 
 
-            Console.WriteLine("Starting MQTT Client");
+            Debug.WriteLine("Starting MQTT Client");
             var server = Properties.Settings.Default.Server;
             var port = Properties.Settings.Default.Port;
             var username = Properties.Settings.Default.Username;
@@ -59,7 +59,9 @@ namespace WinMQTT
 
             await MqttClient.ConnectAsync(options, token);
 
-            Console.WriteLine("### CONNECTED WITH SERVER ###");
+            Debug.WriteLine("### CONNECTED WITH SERVER ###");
+
+            TrayContext.SendNotification("WinMQTT Connected to the broker");
 
             await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/sendkeys"));
             await MqttClient.SubscribeAsync(Subscribe($"windows/{machineName}/actions"));
@@ -71,17 +73,20 @@ namespace WinMQTT
 
             MqttClient.UseDisconnectedHandler(async e =>
             {
-                Console.WriteLine("### DISCONNECTED FROM SERVER ###");
+                Debug.WriteLine("### DISCONNECTED FROM SERVER ###");
+                TrayContext.SendNotification("WinMQTT Disconnected from the broker, attempting reconnect");
+
                 if (Running)
                 {
                     try
                     {
                         await MqttClient.ConnectAsync(options, token);
+                        TrayContext.SendNotification("WinMQTT Reconnected to the broker");
                     }
                     catch
                     {
-                        Console.WriteLine("### RECONNECTING FAILED ###");
-                        await Task.Delay(3000);
+                        Debug.WriteLine("### RECONNECTING FAILED ###");
+                        await Task.Delay(3000, token);
                     }
                 }
             });
@@ -92,15 +97,15 @@ namespace WinMQTT
                 {
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                     var topic = e.ApplicationMessage.Topic;
-                    Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
-                    Console.WriteLine($"+ Payload = {payload}");
-                    Console.WriteLine($"+ Topic = {topic}");
+                    Debug.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
+                    Debug.WriteLine($"+ Payload = {payload}");
+                    Debug.WriteLine($"+ Topic = {topic}");
                     Windows.ProcessRequest(topic.RemoveMachineName(), payload);
                 }
                 catch (Exception error)
                 {
-                    Console.WriteLine("Unable to Read Message");
-                    Console.WriteLine($"Error = {error}");
+                    Debug.WriteLine("Unable to Read Message");
+                    Debug.WriteLine($"Error = {error}");
                 }
             });
         }
@@ -113,7 +118,7 @@ namespace WinMQTT
 
         public static async Task Restart()
         {
-            Console.WriteLine("Restarting MQTT Client");
+            Debug.WriteLine("Restarting MQTT Client");
             if (Running)
                 await Stop(false);
 
@@ -122,7 +127,7 @@ namespace WinMQTT
 
         public static async Task Stop(bool sendStop = true)
         {
-            Console.WriteLine("Stopping MQTT Client");
+            Debug.WriteLine("Stopping MQTT Client");
             Running = false;
             SendStatus.Enabled = false;
 

@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "dgSpecHash": "98xoUCt9IdKKX0n+rs+/CRoaNWj5kadUIhL3SxmkHmAFSpEcVM9+riwvoCbCnb2RYabbXvqfgoVgCROSB6I+MQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\jakes\\source\\repos\\WinMQTT\\WinMQTT\\WinMQTT.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\jakes\\.nuget\\packages\\microsoft.netcore.platforms\\3.1.0\\microsoft.netcore.platforms.3.1.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\microsoft.toolkit.uwp.notifications\\7.0.2\\microsoft.toolkit.uwp.notifications.7.0.2.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\microsoft.win32.registry\\4.7.0\\microsoft.win32.registry.4.7.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\mqttnet\\3.0.15\\mqttnet.3.0.15.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\naudio\\2.0.0\\naudio.2.0.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\naudio.asio\\2.0.0\\naudio.asio.2.0.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\naudio.core\\2.0.0\\naudio.core.2.0.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\naudio.midi\\2.0.0\\naudio.midi.2.0.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\naudio.wasapi\\2.0.0\\naudio.wasapi.2.0.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\naudio.winforms\\2.0.0\\naudio.winforms.2.0.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\naudio.winmm\\2.0.0\\naudio.winmm.2.0.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\system.security.accesscontrol\\4.7.0\\system.security.accesscontrol.4.7.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\system.security.principal.windows\\4.7.0\\system.security.principal.windows.4.7.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\system.valuetuple\\4.5.0\\system.valuetuple.4.5.0.nupkg.sha512",
+    "C:\\Users\\jakes\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.17763.15\\microsoft.windows.sdk.net.ref.10.0.17763.15.nupkg.sha512"
+  ],
+  "logs": []
+}
